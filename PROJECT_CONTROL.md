@@ -1,15 +1,15 @@
 # CRM Project Control Doc
 
 ## Current Stage
-Stage 0B — Supabase Connection Ping
+Stage 0C — Leads Table SQL Scaffold
 
 ## Current Objective
-Create a manual script that proves the app can connect to Supabase using safe client-side environment variables.
+Add the initial SQL scaffold for the `leads` table as a manual migration file only.
 
 ## Next Technical Objective
-Stage 0C — Minimal Lead Capture Slice (Scaffold Only)
+Stage 0D — Manual Insert/Read Validation
 
-Define the smallest schema and route plan for a single lead write/read path without adding automations.
+Validate that inserts and reads work against the `leads` table using manual scripts only.
 
 ## Good to Ship Now
 - GitHub repo exists
@@ -18,7 +18,8 @@ Define the smallest schema and route plan for a single lead write/read path with
 - .env.example documents required environment variables
 - .gitignore prevents secrets and local files from being committed
 - Manual Supabase ping script exists
-- No CRM feature workflows have been added yet
+- Stage 0C SQL file exists for `leads` table scaffold
+- No CRM frontend features have been added
 
 ## Not Allowed Yet
 - Auth
@@ -50,7 +51,7 @@ Minimum lead fields:
 One thin slice at a time. Working beats fancy.
 
 ## Current Codex Task
-Set up Stage 0B connectivity proof only (manual Supabase ping).
+Set up Stage 0C SQL scaffold only. Do not build frontend features and do not auto-apply SQL.
 
 ## Definition of Done
-The repo includes a runnable manual ping script for Supabase connectivity, updated documentation, and no CRM features beyond setup scaffolding.
+The repo includes a Stage 0C SQL migration file for `leads`, updated documentation, and no CRM UI/features beyond setup scaffolding.
