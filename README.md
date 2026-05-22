@@ -3,7 +3,7 @@
 A staged build for a car-sales CRM, starting with repository controls and guarded technical slices before product feature development.
 
 ## Current Stage
-Stage 0D — Leads Protection Check
+Stage 0E — Server-side Lead Insert Test
 
 ## What the MVP Will Eventually Do
 The MVP v0.1 target is a basic lead-capture CRM where a lead can submit information, data is saved to Supabase, and leads appear in a simple dashboard.
@@ -21,23 +21,20 @@ The MVP v0.1 target is a basic lead-capture CRM where a lead can submit informat
 - Complex automations
 - Customer-facing production use
 
-## Stage 0D Setup: Leads Protection Check (Manual Only)
-1. Keep Stage 0B connectivity ping available:
-   ```bash
-   npm run db:ping
-   ```
-2. Ensure `.env.local` contains:
+## Stage 0E Setup: Server-side Lead Insert Test (Manual Only)
+1. Ensure `.env.local` contains:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-3. Run the protection check:
+   - `SUPABASE_SECRET_KEY`
+2. Run the server-side insert test:
    ```bash
-   npm run db:leads-protection-check
+   npm run db:server-insert-test
    ```
+3. The script inserts a fake server-side lead and then deletes it as cleanup.
 
 Expected success output:
-- `Leads public insert blocked as expected.`
-
-If you see a serious warning about insert succeeding, your `leads` table is writable via the publishable key and must be fixed immediately with RLS/policies.
+- `Server-side lead insert succeeded.`
+- `Server-side lead cleanup succeeded.`
+- `Stage 0E server insert test passed.`
 
 > Important: This stage does **not** add frontend features and does **not** apply or alter schema automatically.
 

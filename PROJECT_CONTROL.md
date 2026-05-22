@@ -1,15 +1,15 @@
 # CRM Project Control Doc
 
 ## Current Stage
-Stage 0D — Leads Protection Check
+Stage 0E — Server-side Lead Insert Test
 
 ## Current Objective
-Add a manual script that verifies `public.leads` is not publicly readable/writable through the publishable key.
+Add a manual server-side script that verifies an intentional lead insert works with `SUPABASE_SECRET_KEY`, then cleans up the test row.
 
 ## Next Technical Objective
-Stage 0E — Controlled Lead Insert Validation
+Stage 0F — Minimal API Path Planning
 
-Validate a controlled insert/read flow with proper policies and no UI feature rollout.
+Define the thinnest safe server-only insertion path before any UI rollout.
 
 ## Good to Ship Now
 - GitHub repo exists
@@ -20,6 +20,7 @@ Validate a controlled insert/read flow with proper policies and no UI feature ro
 - Manual Supabase ping script exists
 - Stage 0C SQL file exists for `leads` table scaffold
 - Stage 0D protection-check script exists
+- Stage 0E server-insert test script exists
 - No CRM frontend features have been added
 
 ## Not Allowed Yet
@@ -52,7 +53,7 @@ Minimum lead fields:
 One thin slice at a time. Working beats fancy.
 
 ## Current Codex Task
-Set up Stage 0D protection verification script and docs only. Do not build frontend features and do not change schema.
+Set up Stage 0E manual server-side insert verification and cleanup script only. Do not build frontend features and do not change schema.
 
 ## Definition of Done
-The repo includes a runnable Stage 0D protection check script, updated documentation, and no CRM UI/features beyond setup scaffolding.
+The repo includes a runnable Stage 0E server-side insert/cleanup test script, updated documentation, and no CRM UI/features beyond setup scaffolding.
