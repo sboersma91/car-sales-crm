@@ -3,7 +3,7 @@
 A staged build for a car-sales CRM, starting with repository controls and guarded technical slices before product feature development.
 
 ## Current Stage
-Stage 0E — Server-side Lead Insert Test
+Stage 1A — Server API Route for Lead Creation
 
 ## What the MVP Will Eventually Do
 The MVP v0.1 target is a basic lead-capture CRM where a lead can submit information, data is saved to Supabase, and leads appear in a simple dashboard.
@@ -21,22 +21,35 @@ The MVP v0.1 target is a basic lead-capture CRM where a lead can submit informat
 - Complex automations
 - Customer-facing production use
 
-## Stage 0E Setup: Server-side Lead Insert Test (Manual Only)
+## Stage 1A Setup: Server API Route for Lead Creation (Manual Only)
 1. Ensure `.env.local` contains:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `SUPABASE_SECRET_KEY`
-2. Run the server-side insert test:
+2. Start the development server:
    ```bash
-   npm run db:server-insert-test
+   npm run dev
    ```
-3. The script inserts a fake server-side lead and then deletes it as cleanup.
+3. In another terminal, test the API route:
+   ```bash
+   curl -i -X POST http://localhost:3000/api/leads \
+     -H "Content-Type: application/json" \
+     -d '{"name":"API Test Lead","phone":"555-555-5555","vehicle_interest":"Truck","source":"stage_1a_api_test","notes":"Created by API route test"}'
+   ```
 
-Expected success output:
-- `Server-side lead insert succeeded.`
-- `Server-side lead cleanup succeeded.`
-- `Stage 0E server insert test passed.`
+Expected successful response:
+- HTTP status `201`
+- Response body:
+  ```json
+  {
+    "ok": true,
+    "lead": {
+      "id": "...",
+      "created_at": "..."
+    }
+  }
+  ```
 
-> Important: This stage does **not** add frontend features and does **not** apply or alter schema automatically.
+> Important: This stage adds only a server-side API insert path and does **not** add frontend lead forms or dashboard workflows.
 
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.

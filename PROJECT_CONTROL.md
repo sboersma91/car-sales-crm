@@ -1,15 +1,15 @@
 # CRM Project Control Doc
 
 ## Current Stage
-Stage 0E — Server-side Lead Insert Test
+Stage 1A — Server API Route for Lead Creation
 
 ## Current Objective
-Add a manual server-side script that verifies an intentional lead insert works with `SUPABASE_SECRET_KEY`, then cleans up the test row.
+Add a server-side `POST /api/leads` route that validates input and inserts into `public.leads` using `SUPABASE_SECRET_KEY`.
 
 ## Next Technical Objective
-Stage 0F — Minimal API Path Planning
+Stage 1B — Minimal API Hardening and Error Cases
 
-Define the thinnest safe server-only insertion path before any UI rollout.
+Add targeted validation/error-path tests and tighten operational logging boundaries.
 
 ## Good to Ship Now
 - GitHub repo exists
@@ -21,7 +21,7 @@ Define the thinnest safe server-only insertion path before any UI rollout.
 - Stage 0C SQL file exists for `leads` table scaffold
 - Stage 0D protection-check script exists
 - Stage 0E server-insert test script exists
-- No CRM frontend features have been added
+- Stage 1A API route exists for server-side lead creation
 
 ## Not Allowed Yet
 - Auth
@@ -53,7 +53,7 @@ Minimum lead fields:
 One thin slice at a time. Working beats fancy.
 
 ## Current Codex Task
-Set up Stage 0E manual server-side insert verification and cleanup script only. Do not build frontend features and do not change schema.
+Set up Stage 1A server-only lead creation API route. Do not add frontend lead forms, dashboards, or schema changes.
 
 ## Definition of Done
-The repo includes a runnable Stage 0E server-side insert/cleanup test script, updated documentation, and no CRM UI/features beyond setup scaffolding.
+The repo includes a runnable `POST /api/leads` server route with validation and safe insert behavior, plus updated documentation.
