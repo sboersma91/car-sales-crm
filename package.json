@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:ping": "node scripts/ping-supabase.mjs",
+    "db:leads-protection-check": "node scripts/check-leads-protection.mjs",
+    "db:server-insert-test": "node scripts/server-insert-lead-test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
