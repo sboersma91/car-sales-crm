@@ -1,15 +1,15 @@
 # CRM Project Control Doc
 
 ## Current Stage
-Stage 0C — Leads Table SQL Scaffold
+Stage 0D — Leads Protection Check
 
 ## Current Objective
-Add the initial SQL scaffold for the `leads` table as a manual migration file only.
+Add a manual script that verifies `public.leads` is not publicly readable/writable through the publishable key.
 
 ## Next Technical Objective
-Stage 0D — Manual Insert/Read Validation
+Stage 0E — Controlled Lead Insert Validation
 
-Validate that inserts and reads work against the `leads` table using manual scripts only.
+Validate a controlled insert/read flow with proper policies and no UI feature rollout.
 
 ## Good to Ship Now
 - GitHub repo exists
@@ -19,6 +19,7 @@ Validate that inserts and reads work against the `leads` table using manual scri
 - .gitignore prevents secrets and local files from being committed
 - Manual Supabase ping script exists
 - Stage 0C SQL file exists for `leads` table scaffold
+- Stage 0D protection-check script exists
 - No CRM frontend features have been added
 
 ## Not Allowed Yet
@@ -51,7 +52,7 @@ Minimum lead fields:
 One thin slice at a time. Working beats fancy.
 
 ## Current Codex Task
-Set up Stage 0C SQL scaffold only. Do not build frontend features and do not auto-apply SQL.
+Set up Stage 0D protection verification script and docs only. Do not build frontend features and do not change schema.
 
 ## Definition of Done
-The repo includes a Stage 0C SQL migration file for `leads`, updated documentation, and no CRM UI/features beyond setup scaffolding.
+The repo includes a runnable Stage 0D protection check script, updated documentation, and no CRM UI/features beyond setup scaffolding.

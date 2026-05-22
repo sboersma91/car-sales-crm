@@ -1,7 +1,4 @@
-import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-
-dotenv.config({ path: ".env.local" });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -18,10 +15,7 @@ if (!publishableKey) {
 
 const supabase = createClient(supabaseUrl, publishableKey);
 
-const { data, error } = await supabase
-  .from("health_check")
-  .select("*")
-  .limit(1);
+const { data, error } = await supabase.from("health_check").select("*").limit(1);
 
 if (error) {
   console.error("Supabase ping failed:", error.message);
@@ -30,5 +24,3 @@ if (error) {
 
 console.log("Supabase ping succeeded.");
 console.log("health_check rows returned:", data?.length ?? 0);
-
-process.exit(0);
