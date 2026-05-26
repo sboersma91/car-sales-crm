@@ -24,6 +24,7 @@ The MVP v0.1 target is a basic lead-capture CRM where a lead can submit informat
 ## Stage 1A Setup: Server API Route for Lead Creation (Manual Only)
 1. Ensure `.env.local` contains:
    - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SECRET_KEY`
 2. Start the development server:
    ```bash
