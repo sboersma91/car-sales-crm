@@ -1,13 +1,13 @@
 # CRM Project Control Doc
 
 ## Current Stage
-Stage 1A — Server API Route for Lead Creation
+Stage 1B — Minimal Lead Capture Form
 
 ## Current Objective
-Add a server-side `POST /api/leads` route that validates input and inserts into `public.leads` using `SUPABASE_SECRET_KEY`.
+Add a minimal frontend lead capture form that submits to existing `POST /api/leads`.
 
 ## Next Technical Objective
-Stage 1B — Minimal API Hardening and Error Cases
+Stage 1C — Minimal API Hardening and Error Cases
 
 Add targeted validation/error-path tests and tighten operational logging boundaries.
 
@@ -53,7 +53,7 @@ Minimum lead fields:
 One thin slice at a time. Working beats fancy.
 
 ## Current Codex Task
-Set up Stage 1A server-only lead creation API route. Do not add frontend lead forms, dashboards, or schema changes.
+Set up Stage 1B minimal lead capture form to submit to the existing server API route. Do not add dashboards, auth, or schema changes.
 
 ## Definition of Done
-The repo includes a runnable `POST /api/leads` server route with validation and safe insert behavior, plus updated documentation.
+The repo includes a minimal runnable lead capture form that submits to `POST /api/leads`, shows success/failure states, and keeps inserts server-side.

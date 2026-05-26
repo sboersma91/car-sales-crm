@@ -3,7 +3,7 @@
 A staged build for a car-sales CRM, starting with repository controls and guarded technical slices before product feature development.
 
 ## Current Stage
-Stage 1A — Server API Route for Lead Creation
+Stage 1B — Minimal Lead Capture Form
 
 ## What the MVP Will Eventually Do
 The MVP v0.1 target is a basic lead-capture CRM where a lead can submit information, data is saved to Supabase, and leads appear in a simple dashboard.
@@ -21,7 +21,7 @@ The MVP v0.1 target is a basic lead-capture CRM where a lead can submit informat
 - Complex automations
 - Customer-facing production use
 
-## Stage 1A Setup: Server API Route for Lead Creation (Manual Only)
+## Stage 1B Setup: Minimal Lead Capture Form (Manual Only)
 1. Ensure `.env.local` contains:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
@@ -30,7 +30,19 @@ The MVP v0.1 target is a basic lead-capture CRM where a lead can submit informat
    ```bash
    npm run dev
    ```
-3. In another terminal, test the API route:
+3. Open the app in your browser:
+   - `http://localhost:3000`
+4. Fill and submit the lead capture form:
+   - `name` is required
+   - at least one of `phone` or `email` is required
+   - optional: `vehicle_interest`, `notes`
+5. The form submits to `POST /api/leads` with `source` set to `website_form`.
+6. Success criteria:
+   - You see a success message on the page
+   - Form fields reset
+   - New lead appears in Supabase `public.leads`
+
+To manually test the API route directly (optional):
    ```bash
    curl -i -X POST http://localhost:3000/api/leads \
      -H "Content-Type: application/json" \
@@ -50,7 +62,7 @@ Expected successful response:
   }
   ```
 
-> Important: This stage adds only a server-side API insert path and does **not** add frontend lead forms or dashboard workflows.
+> Important: This stage adds only a minimal lead capture form that submits to the existing server API route. It does **not** add dashboard workflows, auth, or automations.
 
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.
