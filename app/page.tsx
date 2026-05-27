@@ -20,8 +20,8 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!form.name.trim()) {
-      setMessage({ type: 'error', text: 'Name is required.' })
+    if (!form.first_name.trim()) {
+      setMessage({ type: 'error', text: 'First name is required.' })
       return
     }
 
@@ -77,6 +77,12 @@ export default function Home() {
           name="name"
           placeholder="Full Name"
           value={form.name}
+          onChange={handleChange}
+        />
+        <input
+          name="last_name"
+          placeholder="Last Name (Optional)"
+          value={form.last_name}
           onChange={handleChange}
         />
         <input

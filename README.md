@@ -33,7 +33,8 @@ The MVP v0.1 target is a basic lead-capture CRM where a lead can submit informat
 3. Open the app in your browser:
    - `http://localhost:3000`
 4. Fill and submit the lead capture form:
-   - `name` is required
+   - `first_name` is required
+   - `last_name` is optional
    - at least one of `phone` or `email` is required
    - optional: `vehicle_interest`, `notes`
 5. The form submits to `POST /api/leads` with `source` set to `website_form`.
@@ -46,7 +47,7 @@ To manually test the API route directly (optional):
    ```bash
    curl -i -X POST http://localhost:3000/api/leads \
      -H "Content-Type: application/json" \
-     -d '{"name":"API Test Lead","phone":"555-555-5555","vehicle_interest":"Truck","source":"stage_1a_api_test","notes":"Created by API route test"}'
+     -d '{"first_name":"API","last_name":"Test Lead","phone":"555-555-5555","vehicle_interest":"Truck","source":"stage_1a_api_test","notes":"Created by API route test"}'
    ```
 
 Expected successful response:

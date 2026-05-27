@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 type LeadPayload = {
-  name?: unknown;
+  first_name?: unknown;
+  last_name?: unknown;
   phone?: unknown;
   email?: unknown;
   vehicle_interest?: unknown;
@@ -25,10 +26,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const name = normalizeOptionalString(body.name);
-  if (!name) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  const firstName = normalizeOptionalString(body.first_name);
+  if (!firstName) {
+    return NextResponse.json({ error: "First name is required" }, { status: 400 });
   }
+
+  const lastName = normalizeOptionalString(body.last_name);
 
   const phone = normalizeOptionalString(body.phone);
   const email = normalizeOptionalString(body.email);
@@ -48,7 +51,8 @@ export async function POST(request: Request) {
   const supabase = createClient(supabaseUrl, secretKey);
 
   const payload = {
-    name,
+    first_name: firstName,
+    last_name: lastName,
     phone,
     email,
     vehicle_interest: normalizeOptionalString(body.vehicle_interest),

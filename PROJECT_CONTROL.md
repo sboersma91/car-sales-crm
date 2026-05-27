@@ -40,7 +40,8 @@ Add targeted validation/error-path tests and tighten operational logging boundar
 A basic lead capture CRM where a lead can submit information, the data saves to Supabase, and the lead appears in a simple dashboard.
 
 Minimum lead fields:
-- name
+- first_name
+- last_name
 - phone
 - email
 - vehicle_interest
