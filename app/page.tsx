@@ -4,8 +4,7 @@ import { useState } from 'react'
 
 export default function Home() {
   const [form, setForm] = useState({
-    first_name: '',
-    last_name: '',
+    name: '',
     email: '',
     phone: '',
     vehicle_interest: '',
@@ -55,8 +54,7 @@ export default function Home() {
 
       setMessage({ type: 'success', text: 'Lead submitted successfully.' })
       setForm({
-        first_name: '',
-        last_name: '',
+        name: '',
         email: '',
         phone: '',
         vehicle_interest: '',
@@ -76,9 +74,9 @@ export default function Home() {
 
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px' }}>
         <input
-          name="first_name"
-          placeholder="First Name"
-          value={form.first_name}
+          name="name"
+          placeholder="Full Name"
+          value={form.name}
           onChange={handleChange}
         />
         <input
