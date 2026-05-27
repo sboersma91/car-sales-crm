@@ -20,7 +20,8 @@ try {
   const supabase = createClient(supabaseUrl, secretKey);
 
   const payload = {
-    name: "Server Insert Test",
+    first_name: "Server",
+    last_name: "Insert Test",
     source: "stage_0e_server_insert_test",
     status: "new",
     notes: "Created by Stage 0E server insert test script",
