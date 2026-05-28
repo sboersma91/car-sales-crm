@@ -24,6 +24,10 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (isSubmitting) {
+      return
+    }
+
     if (!form.first_name.trim()) {
       setMessage({ type: 'error', text: 'First name is required.' })
       return
