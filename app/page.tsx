@@ -2,19 +2,23 @@
 
 import { useState } from 'react'
 
+const initialForm = {
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone: '',
+  vehicle_interest: '',
+  notes: '',
+}
+
 export default function Home() {
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    vehicle_interest: '',
-    notes: '',
-  })
+  const [form, setForm] = useState(initialForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setForm((previous) => ({ ...previous, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,13 +57,7 @@ export default function Home() {
       }
 
       setMessage({ type: 'success', text: 'Lead submitted successfully.' })
-      setForm({
-        name: '',
-        email: '',
-        phone: '',
-        vehicle_interest: '',
-        notes: '',
-      })
+      setForm(initialForm)
     } catch {
       setMessage({ type: 'error', text: 'Something went wrong.' })
     } finally {
