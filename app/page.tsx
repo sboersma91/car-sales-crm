@@ -72,10 +72,10 @@ export default function Home() {
 
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px' }}>
         <input
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={handleChange}
+        name="first_name"
+        placeholder="First Name"
+        value={form.first_name}
+        onChange={handleChange}
         />
         <input
           name="last_name"
