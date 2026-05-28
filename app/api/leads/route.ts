@@ -27,6 +27,17 @@ function normalizeOptionalString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function canonicalizePhone(value: string | null): string | null {
+  if (!value) return null;
+  const digitsOnly = value.replace(/\D/g, "");
+  return digitsOnly.length > 0 ? digitsOnly : null;
+}
+
+function canonicalizeEmail(value: string | null): string | null {
+  if (!value) return null;
+  return value.trim().toLowerCase();
+}
+
 export async function POST(request: Request) {
   let body: LeadPayload;
 
@@ -83,7 +94,7 @@ export async function POST(request: Request) {
   }
 
   if (phone) {
-    const digitsOnly = phone.replace(/\D/g, "");
+    const digitsOnly = canonicalizePhone(phone) ?? "";
     if (digitsOnly.length < 7) {
       return NextResponse.json({ error: "Invalid phone format" }, { status: 400 });
     }
@@ -100,23 +111,31 @@ export async function POST(request: Request) {
   const supabase = createClient(supabaseUrl, secretKey);
 
   const fiveMinutesAgoIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const duplicateMatchers: string[] = [];
-  if (phone) duplicateMatchers.push(`phone.eq.${phone}`);
-  if (email) duplicateMatchers.push(`email.eq.${email}`);
+  const canonicalPhone = canonicalizePhone(phone);
+  const canonicalEmail = canonicalizeEmail(email);
 
-  const { data: duplicateRows, error: duplicateLookupError } = await supabase
+  const { data: recentRows, error: duplicateLookupError } = await supabase
     .from("leads")
-    .select("id")
+    .select("id, phone, email")
     .eq("first_name", firstName)
-    .or(duplicateMatchers.join(","))
     .gte("created_at", fiveMinutesAgoIso)
-    .limit(1);
+    .limit(50);
 
   if (duplicateLookupError) {
     console.error("Duplicate lookup failed:", duplicateLookupError.message);
   }
 
-  if (duplicateRows && duplicateRows.length > 0) {
+  const isDuplicate =
+    recentRows?.some((row) => {
+      const rowPhone = canonicalizePhone(typeof row.phone === "string" ? row.phone : null);
+      const rowEmail = canonicalizeEmail(typeof row.email === "string" ? row.email : null);
+      return (
+        (canonicalPhone !== null && rowPhone === canonicalPhone) ||
+        (canonicalEmail !== null && rowEmail === canonicalEmail)
+      );
+    }) ?? false;
+
+  if (isDuplicate) {
     return NextResponse.json(
       {
         ok: true,
