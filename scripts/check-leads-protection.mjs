@@ -38,7 +38,8 @@ if (leadsSelectError) {
 }
 
 const payload = {
-  name: "Protection Check",
+  first_name: "Protection",
+  last_name: "Check",
   source: "stage_0d_protection_check",
   status: "new",
 };
@@ -69,12 +70,13 @@ if (insertedId !== undefined && insertedId !== null) {
     .from("leads")
     .delete()
     .eq("source", "stage_0d_protection_check")
-    .eq("name", "Protection Check");
+    .eq("first_name", "Protection")
+    .eq("last_name", "Check");
 
   if (cleanupBySourceError) {
-    console.error("Cleanup delete attempt by source/name failed:", cleanupBySourceError.message);
+    console.error("Cleanup delete attempt by source/first_name/last_name failed:", cleanupBySourceError.message);
   } else {
-    console.error("Cleanup delete attempt by source/name succeeded.");
+    console.error("Cleanup delete attempt by source/first_name/last_name succeeded.");
   }
 }
 
