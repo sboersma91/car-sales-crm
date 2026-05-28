@@ -27,6 +27,11 @@ function normalizeOptionalString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function canonicalizeName(value: string | null): string | null {
+  if (!value) return null;
+  return value.trim().toLowerCase();
+}
+
 function canonicalizePhone(value: string | null): string | null {
   if (!value) return null;
   const digitsOnly = value.replace(/\D/g, "");
@@ -111,13 +116,13 @@ export async function POST(request: Request) {
   const supabase = createClient(supabaseUrl, secretKey);
 
   const fiveMinutesAgoIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const canonicalFirstName = canonicalizeName(firstName);
   const canonicalPhone = canonicalizePhone(phone);
   const canonicalEmail = canonicalizeEmail(email);
 
   const { data: recentRows, error: duplicateLookupError } = await supabase
     .from("leads")
-    .select("id, phone, email")
-    .eq("first_name", firstName)
+    .select("id, first_name, phone, email")
     .gte("created_at", fiveMinutesAgoIso)
     .limit(50);
 
@@ -127,12 +132,14 @@ export async function POST(request: Request) {
 
   const isDuplicate =
     recentRows?.some((row) => {
+      const rowFirstName = canonicalizeName(typeof row.first_name === "string" ? row.first_name : null);
       const rowPhone = canonicalizePhone(typeof row.phone === "string" ? row.phone : null);
       const rowEmail = canonicalizeEmail(typeof row.email === "string" ? row.email : null);
-      return (
-        (canonicalPhone !== null && rowPhone === canonicalPhone) ||
-        (canonicalEmail !== null && rowEmail === canonicalEmail)
-      );
+      const sameFirstName = canonicalFirstName !== null && rowFirstName === canonicalFirstName;
+      const samePhone = canonicalPhone !== null && rowPhone === canonicalPhone;
+      const sameEmail = canonicalEmail !== null && rowEmail === canonicalEmail;
+
+      return sameFirstName && (samePhone || sameEmail);
     }) ?? false;
 
   if (isDuplicate) {
