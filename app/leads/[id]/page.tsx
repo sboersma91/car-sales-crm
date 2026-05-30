@@ -1,13 +1,12 @@
-import { supabase } from '../../../lib/supabase'
+import { supabaseServer } from '../../../lib/supabase-server'
+import Link from 'next/link'
 
 export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  console.log('ID:', id)
-
-  const { data: lead, error } = await supabase
+  const { data: lead, error } = await supabaseServer
     .from('leads')
-    .select('*')
+    .select('id, first_name, last_name, email, phone, vehicle_interest, notes, status, source, created_at')
     .eq('id', id)
     .single()
 
@@ -17,6 +16,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
 
   return (
     <div style={{ padding: '40px' }}>
+      <Link href="/leads">Back to leads</Link>
       <h1>Lead Detail</h1>
 
       <p><strong>Name:</strong> {lead.first_name} {lead.last_name}</p>
