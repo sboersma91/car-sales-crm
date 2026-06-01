@@ -56,7 +56,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
   const currentStatus = isLeadStatus(lead.status) ? lead.status : 'new'
 
   return (
-    <div style={{ padding: '40px' }}>
+    <div>
       <Link href="/leads">Back to leads</Link>
 
       <div style={{ marginTop: '24px' }}>

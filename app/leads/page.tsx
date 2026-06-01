@@ -28,7 +28,7 @@ export default async function LeadsPage() {
   }
 
   return (
-    <div style={{ padding: '40px' }}>
+    <div>
       <h1>Leads</h1>
 
       {leads && leads.length === 0 ? <p>No leads found.</p> : null}
