@@ -1,4 +1,5 @@
 import { supabaseServer } from '../../../lib/supabase-server'
+import { LEAD_STATUSES, isLeadStatus } from '../../../lib/lead-status'
 import Link from 'next/link'
 
 function formatValue(value: string | null): string {
@@ -22,7 +23,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
 
   const { data: lead, error } = await supabaseServer
     .from('leads')
-    .select('id, first_name, last_name, email, phone, vehicle_interest, notes, status, source, created_at')
+    .select('id, first_name, last_name, email, phone, vehicle_interest, notes, status, source, created_at, updated_at')
     .eq('id', id)
     .single()
 
@@ -31,6 +32,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
   }
 
   const fullName = `${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim()
+  const currentStatus = isLeadStatus(lead.status) ? lead.status : 'new'
 
   return (
     <div style={{ padding: '40px' }}>
@@ -47,7 +49,27 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
           <div><strong>Status:</strong> {formatValue(lead.status)}</div>
           <div><strong>Source:</strong> {formatValue(lead.source)}</div>
           <div><strong>Created:</strong> {formatDate(lead.created_at)}</div>
+          <div><strong>Updated:</strong> {formatDate(lead.updated_at)}</div>
         </div>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Workflow Status</h2>
+          <form
+            action={`/api/leads/${lead.id}/status`}
+            method="post"
+            style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            <label htmlFor="status"><strong>Status:</strong></label>
+            <select id="status" name="status" defaultValue={currentStatus}>
+              {LEAD_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+            <button type="submit">Update status</button>
+          </form>
+        </section>
 
         <section style={{ marginTop: '24px' }}>
           <h2>Notes</h2>

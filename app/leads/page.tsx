@@ -20,7 +20,7 @@ function formatDate(value: string | null): string {
 export default async function LeadsPage() {
   const { data: leads, error } = await supabaseServer
     .from('leads')
-    .select('id, first_name, last_name, email, phone, vehicle_interest, status, source, created_at')
+    .select('id, first_name, last_name, email, phone, vehicle_interest, status, source, created_at, updated_at')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -49,6 +49,7 @@ export default async function LeadsPage() {
               <div><strong>Status:</strong> {formatValue(lead.status)}</div>
               <div><strong>Source:</strong> {formatValue(lead.source)}</div>
               <div><strong>Created:</strong> {formatDate(lead.created_at)}</div>
+              <div><strong>Updated:</strong> {formatDate(lead.updated_at)}</div>
             </div>
           </div>
         ))}
