@@ -38,6 +38,20 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
     .eq('lead_id', id)
     .order('created_at', { ascending: false })
 
+  const { data: upcomingReminders, error: upcomingRemindersError } = await supabaseServer
+    .from('lead_reminders')
+    .select('id, title, note, due_at, completed, created_at')
+    .eq('lead_id', id)
+    .eq('completed', false)
+    .order('due_at', { ascending: true })
+
+  const { data: completedReminders, error: completedRemindersError } = await supabaseServer
+    .from('lead_reminders')
+    .select('id, title, note, due_at, completed, created_at')
+    .eq('lead_id', id)
+    .eq('completed', true)
+    .order('created_at', { ascending: false })
+
   const fullName = `${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim()
   const currentStatus = isLeadStatus(lead.status) ? lead.status : 'new'
 
@@ -81,6 +95,65 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
         <section style={{ marginTop: '24px' }}>
           <h2>Notes</h2>
           <p style={{ whiteSpace: 'pre-wrap' }}>{formatValue(lead.notes)}</p>
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Add Reminder</h2>
+          <form
+            action={`/api/leads/${lead.id}/reminders`}
+            method="post"
+            style={{ display: 'grid', gap: '8px', maxWidth: '420px' }}
+          >
+            <label htmlFor="reminder-title"><strong>Title:</strong></label>
+            <input id="reminder-title" name="title" required />
+
+            <label htmlFor="reminder-due-at"><strong>Due:</strong></label>
+            <input id="reminder-due-at" name="due_at" type="datetime-local" required />
+
+            <label htmlFor="reminder-note"><strong>Note:</strong></label>
+            <textarea id="reminder-note" name="note" rows={4} placeholder="Optional reminder note" />
+
+            <button type="submit">Add reminder</button>
+          </form>
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Upcoming Reminders</h2>
+          {upcomingRemindersError ? <p>Error loading upcoming reminders.</p> : null}
+          {!upcomingRemindersError && upcomingReminders?.length === 0 ? <p>No upcoming reminders.</p> : null}
+          {!upcomingRemindersError && upcomingReminders && upcomingReminders.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {upcomingReminders.map((reminder) => (
+                <article key={reminder.id} style={{ borderBottom: '1px solid #ddd', paddingBottom: '12px' }}>
+                  <div><strong>Title:</strong> {formatValue(reminder.title)}</div>
+                  <div><strong>Due:</strong> {formatDate(reminder.due_at)}</div>
+                  <div><strong>Completed:</strong> {reminder.completed ? 'Yes' : 'No'}</div>
+                  <p style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{formatValue(reminder.note)}</p>
+                  <form action={`/api/reminders/${reminder.id}/complete`} method="post">
+                    <button type="submit">Mark complete</button>
+                  </form>
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Completed Reminders</h2>
+          {completedRemindersError ? <p>Error loading completed reminders.</p> : null}
+          {!completedRemindersError && completedReminders?.length === 0 ? <p>No completed reminders.</p> : null}
+          {!completedRemindersError && completedReminders && completedReminders.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {completedReminders.map((reminder) => (
+                <article key={reminder.id} style={{ borderBottom: '1px solid #ddd', paddingBottom: '12px' }}>
+                  <div><strong>Title:</strong> {formatValue(reminder.title)}</div>
+                  <div><strong>Due:</strong> {formatDate(reminder.due_at)}</div>
+                  <div><strong>Completed:</strong> {reminder.completed ? 'Yes' : 'No'}</div>
+                  <p style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{formatValue(reminder.note)}</p>
+                </article>
+              ))}
+            </div>
+          ) : null}
         </section>
 
         <section style={{ marginTop: '24px' }}>
