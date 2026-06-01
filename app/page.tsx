@@ -70,7 +70,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ maxWidth: '560px', padding: '40px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '560px' }}>
       <h1>Lead Capture</h1>
       <p>Submit your info and our team will follow up.</p>
 
