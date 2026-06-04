@@ -51,17 +51,18 @@ export default async function LeadsPage({ searchParams }: { searchParams: LeadSe
   }
 
   const filteredLeads = leads?.filter((lead) => matchesSearch(lead, query)) ?? []
-  const leadIds = filteredLeads.map((lead) => lead.id)
+  const leadIds = new Set(filteredLeads.map((lead) => lead.id))
   const now = new Date()
 
-  const { data: incompleteReminders, error: remindersError } = leadIds.length > 0
-    ? await supabaseServer
-      .from('lead_reminders')
-      .select('lead_id, due_at')
-      .in('lead_id', leadIds)
-      .eq('completed', false)
-      .order('due_at', { ascending: true })
-    : { data: [], error: null }
+  const { data: incompleteReminders, error: remindersError } = await supabaseServer
+    .from('lead_reminders')
+    .select('lead_id, due_at')
+    .eq('completed', false)
+    .order('due_at', { ascending: true })
+
+  if (remindersError) {
+    console.error('Lead reminder summary failed:', remindersError.message)
+  }
 
   const reminderSummaryByLead = new Map<
     number,
@@ -69,6 +70,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: LeadSe
   >()
 
   for (const reminder of incompleteReminders ?? []) {
+    if (!leadIds.has(reminder.lead_id)) continue
+
     const dueAt = new Date(reminder.due_at)
     if (Number.isNaN(dueAt.getTime())) continue
 
