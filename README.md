@@ -74,5 +74,14 @@ The server-side auth foundation requires:
 
 Create the operator manually in Supabase Auth and set `CRM_OPERATOR_USER_ID` to that user's UUID. Public signup, login UI, logout, route protection, and RLS are not part of Phase 1. The reusable `requireOperator()` helper is available for later protected routes and fails closed when required configuration or a valid allowed-user session is missing.
 
+## Phase 5 CRM RLS Defense-in-Depth
+After applying `supabase/sql/001_create_leads.sql` through `supabase/sql/005_create_lead_reminders.sql`, manually apply `supabase/sql/006_enable_crm_rls.sql`. It enables row-level security on `leads`, `lead_activities`, and `lead_reminders` without creating `anon` or `authenticated` policies. Direct publishable-key CRM access is therefore denied by default; CRM access remains limited to the privileged server client behind the existing operator-protected application routes.
+
+Verify the applied database posture with:
+```bash
+npm run db:crm-access-check
+```
+The check creates temporary CRM fixtures through `SUPABASE_SECRET_KEY`, verifies publishable-key reads/inserts/updates/deletes are denied for all three CRM tables, verifies privileged reads/inserts/updates/deletes still work, and removes the fixtures. The public lead-capture flow continues through the server-side `POST /api/leads` route rather than direct browser database access.
+
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.
