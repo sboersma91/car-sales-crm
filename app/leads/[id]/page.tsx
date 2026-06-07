@@ -184,6 +184,31 @@ export default async function LeadDetail({
         </section>
 
         <section style={{ marginTop: '24px' }}>
+          <h2>Communication Timeline</h2>
+          {timelineError ? <p>Error loading communication timeline.</p> : null}
+          {!timelineError && timelineEvents?.length === 0 ? <p>No communication events yet.</p> : null}
+          {!timelineError && timelineEvents && timelineEvents.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {timelineEvents.map((event) => {
+                const title = getMetadataString(event.metadata, 'title')
+                const dueAt = getMetadataString(event.metadata, 'due_at')
+
+                return (
+                  <article key={event.id} style={{ borderBottom: '1px solid #ddd', paddingBottom: '12px' }}>
+                    <div><strong>{formatEventType(event.event_type, event.metadata)}</strong></div>
+                    <div><strong>Direction:</strong> {formatValue(event.direction)}</div>
+                    <div><strong>When:</strong> {formatDate(event.occurred_at)}</div>
+                    {title ? <div><strong>Reminder:</strong> {title}</div> : null}
+                    {dueAt ? <div><strong>Due:</strong> {formatDate(dueAt)}</div> : null}
+                    <p style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{formatValue(event.body)}</p>
+                  </article>
+                )
+              })}
+            </div>
+          ) : null}
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
           <h2>Add Reminder</h2>
           <form
             action={`/api/leads/${lead.id}/reminders`}
