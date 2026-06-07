@@ -28,8 +28,17 @@ function getConfiguredOperatorId(): string {
   return operatorId
 }
 
-export async function requireOperator(): Promise<User> {
+export function requireConfiguredOperator(user: User): User {
   const operatorId = getConfiguredOperatorId()
+
+  if (user.id.toLowerCase() !== operatorId) {
+    throw new OperatorAuthorizationError('forbidden')
+  }
+
+  return user
+}
+
+export async function requireOperator(): Promise<User> {
   const supabaseAuth = await createSupabaseAuthServerClient()
   const { data, error } = await supabaseAuth.auth.getUser()
 
@@ -37,9 +46,5 @@ export async function requireOperator(): Promise<User> {
     throw new OperatorAuthorizationError('unauthenticated')
   }
 
-  if (data.user.id.toLowerCase() !== operatorId) {
-    throw new OperatorAuthorizationError('forbidden')
-  }
-
-  return data.user
+  return requireConfiguredOperator(data.user)
 }
