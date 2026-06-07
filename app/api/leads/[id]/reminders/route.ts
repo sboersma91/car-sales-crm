@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { requireOperatorApi } from '../../../../../lib/require-operator-api'
 import { supabaseServer } from '../../../../../lib/supabase-server'
 
 function normalizeOptionalString(value: FormDataEntryValue | null): string | null {
@@ -10,6 +11,9 @@ function normalizeOptionalString(value: FormDataEntryValue | null): string | nul
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authorizationFailure = await requireOperatorApi()
+  if (authorizationFailure) return authorizationFailure
+
   const { id } = await params
   const formData = await request.formData()
   const title = normalizeOptionalString(formData.get('title'))
