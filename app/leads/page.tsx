@@ -1,3 +1,4 @@
+import { requireOperatorPage } from '../../lib/require-operator-page'
 import { supabaseServer } from '../../lib/supabase-server'
 import Link from 'next/link'
 
@@ -39,6 +40,16 @@ function matchesSearch(lead: {
 }
 
 export default async function LeadsPage({ searchParams }: { searchParams: LeadSearchParams }) {
+  const accessFailure = await requireOperatorPage()
+
+  if (accessFailure === 'forbidden') {
+    return <div>Forbidden</div>
+  }
+
+  if (accessFailure === 'configuration_error') {
+    return <div>CRM access is unavailable</div>
+  }
+
   const query = getSearchQuery((await searchParams).q)
 
   const { data: leads, error } = await supabaseServer

@@ -1,3 +1,4 @@
+import { requireOperatorPage } from '../../../lib/require-operator-page'
 import { supabaseServer } from '../../../lib/supabase-server'
 import { LEAD_ACTIVITY_TYPES } from '../../../lib/lead-activity-types'
 import { LEAD_STATUSES, isLeadStatus } from '../../../lib/lead-status'
@@ -20,6 +21,16 @@ function formatDate(value: string | null): string {
 }
 
 export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
+  const accessFailure = await requireOperatorPage()
+
+  if (accessFailure === 'forbidden') {
+    return <div>Forbidden</div>
+  }
+
+  if (accessFailure === 'configuration_error') {
+    return <div>CRM access is unavailable</div>
+  }
+
   const { id } = await params
 
   const { data: lead, error } = await supabaseServer
