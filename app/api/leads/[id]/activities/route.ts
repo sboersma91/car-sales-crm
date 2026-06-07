@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { requireOperatorApi } from '../../../../../lib/require-operator-api'
 import { isLeadActivityType } from '../../../../../lib/lead-activity-types'
 import { supabaseServer } from '../../../../../lib/supabase-server'
 
@@ -11,6 +12,9 @@ function normalizeOptionalNote(value: FormDataEntryValue | null): string | null 
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authorizationFailure = await requireOperatorApi()
+  if (authorizationFailure) return authorizationFailure
+
   const { id } = await params
   const formData = await request.formData()
   const type = formData.get('type')

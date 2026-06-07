@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { requireOperatorApi } from '../../../../../lib/require-operator-api'
 import { supabaseServer } from '../../../../../lib/supabase-server'
 
 function getRedirectUrl(request: Request): URL {
@@ -17,6 +18,9 @@ function getRedirectUrl(request: Request): URL {
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authorizationFailure = await requireOperatorApi()
+  if (authorizationFailure) return authorizationFailure
+
   const { id } = await params
 
   const { error } = await supabaseServer
