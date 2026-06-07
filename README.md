@@ -65,5 +65,41 @@ Expected successful response:
 
 > Important: This stage adds only a minimal lead capture form that submits to the existing server API route. It does **not** add dashboard workflows, auth, or automations.
 
+## Phase 1 Auth Foundation Configuration
+The server-side auth foundation requires:
+- `NEXT_PUBLIC_SUPABASE_URL`: existing Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: publishable key used by the session-aware auth client; it is not a privileged CRM credential
+- `SUPABASE_SECRET_KEY`: existing privileged CRM data key; remains server-only and separate from auth sessions
+- `CRM_OPERATOR_USER_ID`: the single allowed operator's immutable Supabase Auth user UUID
+
+Create the operator manually in Supabase Auth and set `CRM_OPERATOR_USER_ID` to that user's UUID. Public signup, login UI, logout, route protection, and RLS are not part of Phase 1. The reusable `requireOperator()` helper is available for later protected routes and fails closed when required configuration or a valid allowed-user session is missing.
+
+## Phase 5 CRM RLS Defense-in-Depth
+After applying `supabase/sql/001_create_leads.sql` through `supabase/sql/005_create_lead_reminders.sql`, manually apply `supabase/sql/006_enable_crm_rls.sql`. It enables row-level security on `leads`, `lead_activities`, and `lead_reminders` without creating `anon` or `authenticated` policies. The later communication timeline migration applies the same deny-by-default posture to `communication_events`. Direct publishable-key CRM access is therefore denied by default; CRM access remains limited to the privileged server client behind the existing operator-protected application routes.
+
+Verify the applied database posture with:
+```bash
+npm run db:crm-access-check
+```
+The check creates temporary CRM fixtures through `SUPABASE_SECRET_KEY`, verifies publishable-key reads/inserts/updates/deletes are denied for all CRM and communication timeline tables, verifies privileged reads/inserts/updates/deletes still work, and removes the fixtures. The public lead-capture flow continues through the server-side `POST /api/leads` route rather than direct browser database access.
+
+## Unified Communication Timeline Foundation
+Apply `supabase/sql/007_create_communication_events.sql` after `006_enable_crm_rls.sql`. It creates the server-only `communication_events` timeline table, backfills existing lead notes, activities, reminders, and current statuses, and records future activity, reminder, and status changes through database triggers. The initial canonical event types are limited to `manual_note`, `reminder_created`, and `status_change`.
+
+The protected lead detail page renders these events newest-first in one communication timeline. Existing activity and reminder sections remain available. No inbound SMS, email, AI, realtime, automation, or browser-side database access is included.
+
+## Outbound SMS Foundation
+Apply `supabase/sql/008_add_outbound_sms_event_type.sql` after `007_create_communication_events.sql`, then configure these server-only variables. Re-run `npm run db:crm-access-check` after applying `008` to verify the new timeline event type remains protected:
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_FROM_NUMBER`
+
+The protected lead detail page allows the operator to manually send one outbound SMS at a time. The protected server route sends through Twilio's Messages REST API and records successful sends as `outbound_sms` communication events. Failed sends return a generic UI error and do not create a successful timeline event. No inbound SMS, webhooks, AI, templates, scheduling, campaigns, retries, or automations are included.
+
+## Conversation State Foundation
+Apply `supabase/sql/009_create_conversations.sql` after `008_add_outbound_sms_event_type.sql`. It creates a minimal server-only `conversations` table for SMS conversation identity and state, adds `conversation_id` to communication events, backfills existing `outbound_sms` events into active SMS conversations, and adds a privileged database function used by outbound SMS sends to atomically attach new events to the active SMS conversation and update `last_activity_at`.
+
+The lead detail page shows the active SMS conversation and labels timeline events with their SMS conversation when available. No inbox, inbound SMS, unread tracking, assignment, escalation states, automation, AI, realtime, or multi-user behavior is included.
+
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.
