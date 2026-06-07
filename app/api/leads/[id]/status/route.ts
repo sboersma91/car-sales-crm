@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 
+import { requireOperatorApi } from '../../../../../lib/require-operator-api'
 import { isLeadStatus } from '../../../../../lib/lead-status'
 import { supabaseServer } from '../../../../../lib/supabase-server'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authorizationFailure = await requireOperatorApi()
+  if (authorizationFailure) return authorizationFailure
+
   const { id } = await params
   const formData = await request.formData()
   const status = formData.get('status')
