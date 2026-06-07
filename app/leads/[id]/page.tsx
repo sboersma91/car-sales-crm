@@ -1,3 +1,4 @@
+import { requireOperatorPage } from '../../../lib/require-operator-page'
 import { supabaseServer } from '../../../lib/supabase-server'
 import { LEAD_ACTIVITY_TYPES } from '../../../lib/lead-activity-types'
 import { LEAD_STATUSES, isLeadStatus } from '../../../lib/lead-status'
@@ -19,8 +20,46 @@ function formatDate(value: string | null): string {
   }).format(date)
 }
 
-export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
+type TimelineMetadata = Record<string, unknown>
+type LeadDetailSearchParams = Promise<{ sms?: string | string[] }>
+
+function getMetadataString(metadata: unknown, key: string): string | null {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const value = (metadata as TimelineMetadata)[key]
+  return typeof value === 'string' ? value : null
+}
+
+function formatEventType(eventType: string, metadata: unknown): string {
+  if (eventType === 'manual_note') {
+    const activityType = getMetadataString(metadata, 'activity_type')
+    return activityType ? `Manual Note (${activityType})` : 'Manual Note'
+  }
+
+  if (eventType === 'status_change') return 'Status Change'
+  if (eventType === 'reminder_created') return 'Reminder Created'
+  if (eventType === 'outbound_sms') return 'Outbound SMS'
+  return eventType
+}
+
+export default async function LeadDetail({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: LeadDetailSearchParams
+}) {
+  const accessFailure = await requireOperatorPage()
+
+  if (accessFailure === 'forbidden') {
+    return <div>Forbidden</div>
+  }
+
+  if (accessFailure === 'configuration_error') {
+    return <div>CRM access is unavailable</div>
+  }
+
   const { id } = await params
+  const smsResult = (await searchParams).sms
 
   const { data: lead, error } = await supabaseServer
     .from('leads')
@@ -51,6 +90,12 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
     .eq('lead_id', id)
     .eq('completed', true)
     .order('created_at', { ascending: false })
+
+  const { data: timelineEvents, error: timelineError } = await supabaseServer
+    .from('communication_events')
+    .select('id, event_type, direction, occurred_at, body, metadata, created_source')
+    .eq('lead_id', id)
+    .order('occurred_at', { ascending: false })
 
   const fullName = `${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim()
   const currentStatus = isLeadStatus(lead.status) ? lead.status : 'new'
@@ -95,6 +140,47 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
         <section style={{ marginTop: '24px' }}>
           <h2>Notes</h2>
           <p style={{ whiteSpace: 'pre-wrap' }}>{formatValue(lead.notes)}</p>
+        </section>
+
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Send SMS</h2>
+          {lead.phone ? (
+            <form action={`/api/leads/${lead.id}/sms`} method="post" style={{ display: 'grid', gap: '8px', maxWidth: '420px' }}>
+              <label htmlFor="sms-body"><strong>Message:</strong></label>
+              <textarea id="sms-body" name="body" rows={4} maxLength={1600} required />
+              <button type="submit">Send SMS</button>
+            </form>
+          ) : (
+            <p>A phone number is required before sending SMS.</p>
+          )}
+          {smsResult === 'sent' ? <p style={{ color: '#0a7a31' }}>SMS sent successfully.</p> : null}
+          {smsResult === 'error' ? <p style={{ color: '#b00020' }}>SMS could not be sent.</p> : null}
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Communication Timeline</h2>
+          {timelineError ? <p>Error loading communication timeline.</p> : null}
+          {!timelineError && timelineEvents?.length === 0 ? <p>No communication events yet.</p> : null}
+          {!timelineError && timelineEvents && timelineEvents.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {timelineEvents.map((event) => {
+                const title = getMetadataString(event.metadata, 'title')
+                const dueAt = getMetadataString(event.metadata, 'due_at')
+
+                return (
+                  <article key={event.id} style={{ borderBottom: '1px solid #ddd', paddingBottom: '12px' }}>
+                    <div><strong>{formatEventType(event.event_type, event.metadata)}</strong></div>
+                    <div><strong>Direction:</strong> {formatValue(event.direction)}</div>
+                    <div><strong>When:</strong> {formatDate(event.occurred_at)}</div>
+                    {title ? <div><strong>Reminder:</strong> {title}</div> : null}
+                    {dueAt ? <div><strong>Due:</strong> {formatDate(dueAt)}</div> : null}
+                    <p style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{formatValue(event.body)}</p>
+                  </article>
+                )
+              })}
+            </div>
+          ) : null}
         </section>
 
         <section style={{ marginTop: '24px' }}>
