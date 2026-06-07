@@ -20,6 +20,25 @@ function formatDate(value: string | null): string {
   }).format(date)
 }
 
+type TimelineMetadata = Record<string, unknown>
+
+function getMetadataString(metadata: unknown, key: string): string | null {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const value = (metadata as TimelineMetadata)[key]
+  return typeof value === 'string' ? value : null
+}
+
+function formatEventType(eventType: string, metadata: unknown): string {
+  if (eventType === 'manual_note') {
+    const activityType = getMetadataString(metadata, 'activity_type')
+    return activityType ? `Manual Note (${activityType})` : 'Manual Note'
+  }
+
+  if (eventType === 'status_change') return 'Status Change'
+  if (eventType === 'reminder_created') return 'Reminder Created'
+  return eventType
+}
+
 export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
   const accessFailure = await requireOperatorPage()
 
@@ -62,6 +81,12 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
     .eq('lead_id', id)
     .eq('completed', true)
     .order('created_at', { ascending: false })
+
+  const { data: timelineEvents, error: timelineError } = await supabaseServer
+    .from('communication_events')
+    .select('id, event_type, direction, occurred_at, body, metadata, created_source')
+    .eq('lead_id', id)
+    .order('occurred_at', { ascending: false })
 
   const fullName = `${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim()
   const currentStatus = isLeadStatus(lead.status) ? lead.status : 'new'
@@ -106,6 +131,31 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
         <section style={{ marginTop: '24px' }}>
           <h2>Notes</h2>
           <p style={{ whiteSpace: 'pre-wrap' }}>{formatValue(lead.notes)}</p>
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Communication Timeline</h2>
+          {timelineError ? <p>Error loading communication timeline.</p> : null}
+          {!timelineError && timelineEvents?.length === 0 ? <p>No communication events yet.</p> : null}
+          {!timelineError && timelineEvents && timelineEvents.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {timelineEvents.map((event) => {
+                const title = getMetadataString(event.metadata, 'title')
+                const dueAt = getMetadataString(event.metadata, 'due_at')
+
+                return (
+                  <article key={event.id} style={{ borderBottom: '1px solid #ddd', paddingBottom: '12px' }}>
+                    <div><strong>{formatEventType(event.event_type, event.metadata)}</strong></div>
+                    <div><strong>Direction:</strong> {formatValue(event.direction)}</div>
+                    <div><strong>When:</strong> {formatDate(event.occurred_at)}</div>
+                    {title ? <div><strong>Reminder:</strong> {title}</div> : null}
+                    {dueAt ? <div><strong>Due:</strong> {formatDate(dueAt)}</div> : null}
+                    <p style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{formatValue(event.body)}</p>
+                  </article>
+                )
+              })}
+            </div>
+          ) : null}
         </section>
 
         <section style={{ marginTop: '24px' }}>

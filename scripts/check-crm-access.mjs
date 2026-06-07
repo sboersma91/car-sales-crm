@@ -23,6 +23,7 @@ for (const [name, value] of [
 const publicClient = createClient(supabaseUrl, publishableKey, { auth: { persistSession: false } });
 const privilegedClient = createClient(supabaseUrl, secretKey, { auth: { persistSession: false } });
 let leadId;
+let communicationEventId;
 const runId = randomUUID();
 const publicLeadSource = `rls_access_check_public_${runId}`;
 const publicActivityNote = `RLS blocked public activity ${runId}`;
@@ -95,14 +96,30 @@ try {
     .single();
   if (reminderError || !reminder) fail("Privileged reminder insert failed", reminderError);
 
+  const { data: communicationEvent, error: communicationEventError } = await privilegedClient
+    .from("communication_events")
+    .insert({
+      lead_id: leadId,
+      event_type: "manual_note",
+      direction: "internal",
+      body: "RLS verification communication event",
+      created_source: "rls_access_check",
+    })
+    .select("id")
+    .single();
+  if (communicationEventError || !communicationEvent) fail("Privileged communication event insert failed", communicationEventError);
+  communicationEventId = communicationEvent.id;
+
   await requirePrivilegedRow("leads", leadId);
   await requirePrivilegedRow("lead_activities", activity.id);
   await requirePrivilegedRow("lead_reminders", reminder.id);
+  await requirePrivilegedRow("communication_events", communicationEventId);
   console.log("Privileged CRM inserts and reads succeeded.");
 
   await requirePublicReadDenied("leads", leadId);
   await requirePublicReadDenied("lead_activities", activity.id);
   await requirePublicReadDenied("lead_reminders", reminder.id);
+  await requirePublicReadDenied("communication_events", communicationEventId);
 
   await requirePublicInsertDenied(
     "leads",
@@ -122,10 +139,23 @@ try {
     "title",
     publicReminderTitle,
   );
+  await requirePublicInsertDenied(
+    "communication_events",
+    { lead_id: leadId, event_type: "manual_note", direction: "internal", body: publicActivityNote, created_source: "rls_access_check_public" },
+    "body",
+    publicActivityNote,
+  );
 
   await requirePublicMutationDenied("leads", leadId, { status: "lost" }, "status", "new");
   await requirePublicMutationDenied("lead_activities", activity.id, { note: "Blocked update" }, "note", "RLS verification fixture");
   await requirePublicMutationDenied("lead_reminders", reminder.id, { completed: true }, "completed", false);
+  await requirePublicMutationDenied(
+    "communication_events",
+    communicationEventId,
+    { body: "Blocked update" },
+    "body",
+    "RLS verification communication event",
+  );
 
   const { data: updatedLead, error: privilegedUpdateError } = await privilegedClient
     .from("leads")
