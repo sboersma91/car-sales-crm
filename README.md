@@ -65,5 +65,14 @@ Expected successful response:
 
 > Important: This stage adds only a minimal lead capture form that submits to the existing server API route. It does **not** add dashboard workflows, auth, or automations.
 
+## Phase 1 Auth Foundation Configuration
+The server-side auth foundation requires:
+- `NEXT_PUBLIC_SUPABASE_URL`: existing Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: publishable key used by the session-aware auth client; it is not a privileged CRM credential
+- `SUPABASE_SECRET_KEY`: existing privileged CRM data key; remains server-only and separate from auth sessions
+- `CRM_OPERATOR_USER_ID`: the single allowed operator's immutable Supabase Auth user UUID
+
+Create the operator manually in Supabase Auth and set `CRM_OPERATOR_USER_ID` to that user's UUID. Public signup, login UI, logout, route protection, and RLS are not part of Phase 1. The reusable `requireOperator()` helper is available for later protected routes and fails closed when required configuration or a valid allowed-user session is missing.
+
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.
