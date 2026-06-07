@@ -35,17 +35,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   try {
     const message = await sendTwilioSms(lead.phone, body)
-    const { error: timelineError } = await supabaseServer.from('communication_events').insert({
-      lead_id: id,
-      event_type: 'outbound_sms',
-      direction: 'outbound',
-      occurred_at: message.occurredAt,
-      body,
-      metadata: {
-        twilio_message_sid: message.sid,
-        twilio_status: message.status,
-      },
-      created_source: 'twilio_outbound_sms',
+    const { error: timelineError } = await supabaseServer.rpc('record_outbound_sms_communication_event', {
+      p_lead_id: id,
+      p_occurred_at: message.occurredAt,
+      p_body: body,
+      p_twilio_message_sid: message.sid,
+      p_twilio_status: message.status,
     })
 
     if (timelineError) {

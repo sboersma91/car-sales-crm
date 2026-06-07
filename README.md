@@ -96,5 +96,10 @@ Apply `supabase/sql/008_add_outbound_sms_event_type.sql` after `007_create_commu
 
 The protected lead detail page allows the operator to manually send one outbound SMS at a time. The protected server route sends through Twilio's Messages REST API and records successful sends as `outbound_sms` communication events. Failed sends return a generic UI error and do not create a successful timeline event. No inbound SMS, webhooks, AI, templates, scheduling, campaigns, retries, or automations are included.
 
+## Conversation State Foundation
+Apply `supabase/sql/009_create_conversations.sql` after `008_add_outbound_sms_event_type.sql`. It creates a minimal server-only `conversations` table for SMS conversation identity and state, adds `conversation_id` to communication events, backfills existing `outbound_sms` events into active SMS conversations, and adds a privileged database function used by outbound SMS sends to atomically attach new events to the active SMS conversation and update `last_activity_at`.
+
+The lead detail page shows the active SMS conversation and labels timeline events with their SMS conversation when available. No inbox, inbound SMS, unread tracking, assignment, escalation states, automation, AI, realtime, or multi-user behavior is included.
+
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.

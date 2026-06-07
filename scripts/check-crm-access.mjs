@@ -24,10 +24,12 @@ const publicClient = createClient(supabaseUrl, publishableKey, { auth: { persist
 const privilegedClient = createClient(supabaseUrl, secretKey, { auth: { persistSession: false } });
 let leadId;
 let communicationEventId;
+let conversationId;
 const runId = randomUUID();
 const publicLeadSource = `rls_access_check_public_${runId}`;
 const publicActivityNote = `RLS blocked public activity ${runId}`;
 const publicReminderTitle = `RLS blocked public reminder ${runId}`;
+const publicConversationActivity = new Date(Date.now() + 86400000).toISOString();
 
 function fail(message, error) {
   throw new Error(error ? `${message}: ${error.message}` : message);
@@ -96,30 +98,46 @@ try {
     .single();
   if (reminderError || !reminder) fail("Privileged reminder insert failed", reminderError);
 
-  const { data: communicationEvent, error: communicationEventError } = await privilegedClient
-    .from("communication_events")
-    .insert({
-      lead_id: leadId,
-      event_type: "outbound_sms",
-      direction: "outbound",
-      body: "RLS verification outbound SMS event",
-      created_source: "rls_access_check",
-    })
-    .select("id")
+  const conversationActivityAt = new Date().toISOString();
+  const { data: recordedEventId, error: communicationEventError } = await privilegedClient.rpc(
+    "record_outbound_sms_communication_event",
+    {
+      p_lead_id: leadId,
+      p_occurred_at: conversationActivityAt,
+      p_body: "RLS verification outbound SMS event",
+      p_twilio_message_sid: `SM${runId.replaceAll("-", "")}`,
+      p_twilio_status: "queued",
+    },
+  );
+  if (communicationEventError || !recordedEventId) fail("Privileged outbound SMS event recording failed", communicationEventError);
+  communicationEventId = recordedEventId;
+
+  const { data: conversation, error: conversationError } = await privilegedClient
+    .from("conversations")
+    .select("id, last_activity_at")
+    .eq("lead_id", leadId)
+    .eq("channel_type", "sms")
+    .eq("status", "active")
     .single();
-  if (communicationEventError || !communicationEvent) fail("Privileged communication event insert failed", communicationEventError);
-  communicationEventId = communicationEvent.id;
+  if (conversationError || !conversation) fail("Privileged active SMS conversation lookup failed", conversationError);
+  if (conversation.last_activity_at !== conversationActivityAt) fail("Active SMS conversation last_activity_at was not updated");
+  conversationId = conversation.id;
+
+  const recordedEvent = await requirePrivilegedRow("communication_events", communicationEventId, "id, conversation_id");
+  if (recordedEvent.conversation_id !== conversationId) fail("Outbound SMS event was not associated with the active SMS conversation");
 
   await requirePrivilegedRow("leads", leadId);
   await requirePrivilegedRow("lead_activities", activity.id);
   await requirePrivilegedRow("lead_reminders", reminder.id);
   await requirePrivilegedRow("communication_events", communicationEventId);
+  await requirePrivilegedRow("conversations", conversationId);
   console.log("Privileged CRM inserts and reads succeeded.");
 
   await requirePublicReadDenied("leads", leadId);
   await requirePublicReadDenied("lead_activities", activity.id);
   await requirePublicReadDenied("lead_reminders", reminder.id);
   await requirePublicReadDenied("communication_events", communicationEventId);
+  await requirePublicReadDenied("conversations", conversationId);
 
   await requirePublicInsertDenied(
     "leads",
@@ -141,9 +159,15 @@ try {
   );
   await requirePublicInsertDenied(
     "communication_events",
-    { lead_id: leadId, event_type: "outbound_sms", direction: "outbound", body: publicActivityNote, created_source: "rls_access_check_public" },
+    { lead_id: leadId, conversation_id: conversationId, event_type: "outbound_sms", direction: "outbound", body: publicActivityNote, created_source: "rls_access_check_public" },
     "body",
     publicActivityNote,
+  );
+  await requirePublicInsertDenied(
+    "conversations",
+    { lead_id: leadId, channel_type: "sms", status: "closed", last_activity_at: publicConversationActivity },
+    "last_activity_at",
+    publicConversationActivity,
   );
 
   await requirePublicMutationDenied("leads", leadId, { status: "lost" }, "status", "new");
@@ -156,6 +180,7 @@ try {
     "body",
     "RLS verification outbound SMS event",
   );
+  await requirePublicMutationDenied("conversations", conversationId, { status: "closed" }, "status", "active");
 
   const { data: updatedLead, error: privilegedUpdateError } = await privilegedClient
     .from("leads")
