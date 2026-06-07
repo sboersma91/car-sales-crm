@@ -21,6 +21,7 @@ function formatDate(value: string | null): string {
 }
 
 type TimelineMetadata = Record<string, unknown>
+type LeadDetailSearchParams = Promise<{ sms?: string | string[] }>
 
 function getMetadataString(metadata: unknown, key: string): string | null {
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
@@ -36,10 +37,17 @@ function formatEventType(eventType: string, metadata: unknown): string {
 
   if (eventType === 'status_change') return 'Status Change'
   if (eventType === 'reminder_created') return 'Reminder Created'
+  if (eventType === 'outbound_sms') return 'Outbound SMS'
   return eventType
 }
 
-export default async function LeadDetail({ params }: { params: Promise<{ id: string }> }) {
+export default async function LeadDetail({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: LeadDetailSearchParams
+}) {
   const accessFailure = await requireOperatorPage()
 
   if (accessFailure === 'forbidden') {
@@ -51,6 +59,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
   }
 
   const { id } = await params
+  const smsResult = (await searchParams).sms
 
   const { data: lead, error } = await supabaseServer
     .from('leads')
@@ -131,6 +140,47 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
         <section style={{ marginTop: '24px' }}>
           <h2>Notes</h2>
           <p style={{ whiteSpace: 'pre-wrap' }}>{formatValue(lead.notes)}</p>
+        </section>
+
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Send SMS</h2>
+          {lead.phone ? (
+            <form action={`/api/leads/${lead.id}/sms`} method="post" style={{ display: 'grid', gap: '8px', maxWidth: '420px' }}>
+              <label htmlFor="sms-body"><strong>Message:</strong></label>
+              <textarea id="sms-body" name="body" rows={4} maxLength={1600} required />
+              <button type="submit">Send SMS</button>
+            </form>
+          ) : (
+            <p>A phone number is required before sending SMS.</p>
+          )}
+          {smsResult === 'sent' ? <p style={{ color: '#0a7a31' }}>SMS sent successfully.</p> : null}
+          {smsResult === 'error' ? <p style={{ color: '#b00020' }}>SMS could not be sent.</p> : null}
+        </section>
+
+        <section style={{ marginTop: '24px' }}>
+          <h2>Communication Timeline</h2>
+          {timelineError ? <p>Error loading communication timeline.</p> : null}
+          {!timelineError && timelineEvents?.length === 0 ? <p>No communication events yet.</p> : null}
+          {!timelineError && timelineEvents && timelineEvents.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {timelineEvents.map((event) => {
+                const title = getMetadataString(event.metadata, 'title')
+                const dueAt = getMetadataString(event.metadata, 'due_at')
+
+                return (
+                  <article key={event.id} style={{ borderBottom: '1px solid #ddd', paddingBottom: '12px' }}>
+                    <div><strong>{formatEventType(event.event_type, event.metadata)}</strong></div>
+                    <div><strong>Direction:</strong> {formatValue(event.direction)}</div>
+                    <div><strong>When:</strong> {formatDate(event.occurred_at)}</div>
+                    {title ? <div><strong>Reminder:</strong> {title}</div> : null}
+                    {dueAt ? <div><strong>Due:</strong> {formatDate(dueAt)}</div> : null}
+                    <p style={{ whiteSpace: 'pre-wrap', marginTop: '8px' }}>{formatValue(event.body)}</p>
+                  </article>
+                )
+              })}
+            </div>
+          ) : null}
         </section>
 
         <section style={{ marginTop: '24px' }}>

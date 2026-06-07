@@ -100,9 +100,9 @@ try {
     .from("communication_events")
     .insert({
       lead_id: leadId,
-      event_type: "manual_note",
-      direction: "internal",
-      body: "RLS verification communication event",
+      event_type: "outbound_sms",
+      direction: "outbound",
+      body: "RLS verification outbound SMS event",
       created_source: "rls_access_check",
     })
     .select("id")
@@ -141,7 +141,7 @@ try {
   );
   await requirePublicInsertDenied(
     "communication_events",
-    { lead_id: leadId, event_type: "manual_note", direction: "internal", body: publicActivityNote, created_source: "rls_access_check_public" },
+    { lead_id: leadId, event_type: "outbound_sms", direction: "outbound", body: publicActivityNote, created_source: "rls_access_check_public" },
     "body",
     publicActivityNote,
   );
@@ -154,7 +154,7 @@ try {
     communicationEventId,
     { body: "Blocked update" },
     "body",
-    "RLS verification communication event",
+    "RLS verification outbound SMS event",
   );
 
   const { data: updatedLead, error: privilegedUpdateError } = await privilegedClient

@@ -86,7 +86,15 @@ The check creates temporary CRM fixtures through `SUPABASE_SECRET_KEY`, verifies
 ## Unified Communication Timeline Foundation
 Apply `supabase/sql/007_create_communication_events.sql` after `006_enable_crm_rls.sql`. It creates the server-only `communication_events` timeline table, backfills existing lead notes, activities, reminders, and current statuses, and records future activity, reminder, and status changes through database triggers. The initial canonical event types are limited to `manual_note`, `reminder_created`, and `status_change`.
 
-The protected lead detail page renders these events newest-first in one communication timeline. Existing activity and reminder sections remain available. No SMS, email, AI, realtime, automation, or browser-side database access is included.
+The protected lead detail page renders these events newest-first in one communication timeline. Existing activity and reminder sections remain available. No inbound SMS, email, AI, realtime, automation, or browser-side database access is included.
+
+## Outbound SMS Foundation
+Apply `supabase/sql/008_add_outbound_sms_event_type.sql` after `007_create_communication_events.sql`, then configure these server-only variables. Re-run `npm run db:crm-access-check` after applying `008` to verify the new timeline event type remains protected:
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_FROM_NUMBER`
+
+The protected lead detail page allows the operator to manually send one outbound SMS at a time. The protected server route sends through Twilio's Messages REST API and records successful sends as `outbound_sms` communication events. Failed sends return a generic UI error and do not create a successful timeline event. No inbound SMS, webhooks, AI, templates, scheduling, campaigns, retries, or automations are included.
 
 ## Security Warning
 Never commit secrets. Do not commit `.env.local` or any real API/service keys.
